@@ -19,10 +19,7 @@ def dl_status_checker(thread, connection):
 
 def handle_commands(connection, command, params):
     if command == "dl":
-        if params[1] == '0':
-            params[1] = False
-        else:
-            params[1] = True
+        params[1] = params[1] != '0'
         if not params[1] and len(params) == 2:
             params.append(None)
         htt_thread = threading.Thread(target=httrack.download, args=(params[0], params[1], params[2]))
@@ -34,10 +31,18 @@ def handle_commands(connection, command, params):
         folder_list = []
         archive_list = []
         for file in file_list:
-            if path.isdir(config.sites_directory + '/' + file) and file != "hts-cache":
+            if (
+                path.isdir(f'{config.sites_directory}/{file}')
+                and file != "hts-cache"
+            ):
                 folder_list.append(file)
-            if path.isfile(config.sites_directory + '/' + file) and \
-                    (file[-7:] == ".tar.gz" or file[-8:] == ".tar.bz2" or file[-5:] == ".tar"):
+            if path.isfile(f'{config.sites_directory}/{file}') and (
+                (
+                    file[-7:] == ".tar.gz"
+                    or file[-8:] == ".tar.bz2"
+                    or file[-5:] == ".tar"
+                )
+            ):
                 archive_list.append(file)
         site_string = ""
         folder_found = False
@@ -48,13 +53,13 @@ def handle_commands(connection, command, params):
             if folder_found:
                 site_string += "\n================================================================================\n"
             site_string += "List of archives:\n" + "\n".join(archive_list)
-        if site_string == "":
+        if not site_string:
             site_string = "Sites not found!"
         protocol.send(connection, site_string)
     elif command == "load":
         load = ""
         for i in range (1, 100000):
-            load += str(i) + ' '
+            load += f'{str(i)} '
             if i % 1000 == 0:
                 load += '\n'
         protocol.send(connection, load)
